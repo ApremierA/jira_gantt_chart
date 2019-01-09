@@ -1,0 +1,4 @@
+gantt_chart:
+    resource: "@GanttChartBundle/Controller"
+    type:     annotation
+

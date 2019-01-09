@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir="." default="build" name="JiraChart">
+
+    <property name="build.dir" value="./build"/>
+    <property name="build.bin" value="./vendor/bin"/>
+    <property name="build.strict" value="false"/>
+
+    <property name="build.argsSpace" value="src test"/>
+    <property name="build.argsSpaceNoTest" value="src"/>
+    <property name="build.argsComma" value="src,test"/>
+
+    <target name="build"
+            depends="clean,lint,phpcs,phpcpd,pdepend,phploc,cyclophp,test,phpcb"
+            description="Запуск тестов и инструментов анализа">
+    </target>
+
+    <target name="clean" hidden="true"
+            description="Очистка рабочей директории от устаревших артефактов">
+        <delete dir="${build.dir}/phpcs"/>
+        <delete dir="${build.dir}/phpcpd"/>
+        <delete dir="${build.dir}/phpmd"/>
+        <delete dir="${build.dir}/pdepend"/>
+        <delete dir="${build.dir}/phploc"/>
+        <delete dir="${build.dir}/phpcb"/>
+        <delete dir="${build.dir}/test"/>
+    </target>
+
+    <target name="init" depends="" hidden="true"
+            description="Инициализация окружения для сборки">
+        <mkdir dir="${build.dir}/phpcs"/>
+        <mkdir dir="${build.dir}/phpcpd"/>
+        <mkdir dir="${build.dir}/phpmd"/>
+        <mkdir dir="${build.dir}/pdepend"/>
+        <mkdir dir="${build.dir}/phploc"/>
+        <mkdir dir="${build.dir}/phpcb"/>
+        <mkdir dir="${build.dir}/test"/>
+    </target>
+
+    <target name="lint" depends="init"
+            description="Проверка исходных файлов на корректность синтаксиса">
+        <exec passthru="true"
+              checkreturn="${build.strict}"
+              executable="${build.bin}/parallel-lint">
+            <arg line="${build.argsSpace}"/>
+            <arg line="--exclude vendor"/>
+        </exec>
+    </target>
+
+    <target name="phpcs" depends="init"
+            description="Проверка исходных файлов на соответствие стилю">
+        <exec passthru="true"
+              checkreturn="${build.strict}"
+              executable="${build.bin}/phpcs">
+            <arg line="${build.argsSpace}"/>
+            <arg line="--report-checkstyle=${build.dir}/phpcs/report.xml"/>
+            <arg line="--encoding=UTF-8"/>
+            <arg line="--standard=./vendor/itmh/coding-standard-php/phpcs/ITMH"/>
+            <arg line="--extensions=php"/>
+            <arg line="--report-full"/>
+            <arg line="--report-width=auto"/>
+        </exec>
+
+    </target>
+
+    <target name="phpcpd" depends="init"
+            description="Поиск дубликатов кода">
+        <exec passthru="true"
+              checkreturn="false"
+              executable="${build.bin}/phpcpd">
+            <arg line="${build.argsSpaceNoTest}"/>
+            <arg line="--log-pmd ${build.dir}/phpcpd/report.xml"/>
+            <arg line="--exclude=vendor"/>
+        </exec>
+    </target>
+
+    <target name="phpmd" depends="init"
+            description="Проверка файлов на наличие грязного кода">
+        <exec passthru="true"
+              checkreturn="${build.strict}"
+              executable="${build.bin}/phpmd">
+            <arg line="${build.argsComma}"/>
+            <arg line="xml ./vendor/itmh/coding-standard-php/phpmd/ruleset.xml"/>
+            <arg line="--reportfile ${build.dir}/phpmd/report.xml"/>
+            <arg line="--exclude vendor"/>
+        </exec>
+    </target>
+
+    <target name="pdepend" depends="init"
+            description="Вычисление зависимостей в коде">
+        <exec passthru="true"
+              checkreturn="${build.strict}"
+              executable="${build.bin}/pdepend">
+            <arg line="--suffix=php"/>
+            <arg line="--summary-xml=${build.dir}/pdepend/report.xml"/>
+            <arg line="--jdepend-xml=${build.dir}/pdepend/jdepend.xml"/>
+            <arg line="--jdepend-chart=${build.dir}/pdepend/jdepend-chart.svg"/>
+            <arg line="--overview-pyramid=${build.dir}/pdepend/overview-pyramid.svg"/>
+            <arg line="--ignore=vendor,test,tests"/>
+            <arg line="${build.argsComma}"/>
+        </exec>
+    </target>
+
+    <target name="phploc" depends="init"
+            description="Подсчёт размера проекта">
+        <exec passthru="true"
+              checkreturn="${build.strict}"
+              executable="${build.bin}/phploc">
+            <arg line="--log-xml=${build.dir}/phploc/report.xml"/>
+            <arg line="--exclude=vendor"/>
+            <arg line="--exclude=test"/>
+            <arg line="--exclude=tests"/>
+            <arg line="--"/>
+            <arg line="${build.argsSpace}"/>
+        </exec>
+    </target>
+
+    <target name="cyclophp" depends="init"
+            description="Поиск методов с наибольшей цикломатической сложностью">
+        <exec passthru="true"
+              checkreturn="${build.strict}"
+              executable="${build.bin}/cyclophp">
+            <arg line="run"/>
+            <arg line="${build.argsSpaceNoTest}"/>
+            <arg line="--threshold=4"/>
+        </exec>
+    </target>
+
+    <target name="test" depends="init"
+            description="Запуск тестов и подсчёт покрытия">
+        <exec passthru="true"
+              checkreturn="${build.strict}"
+              executable="${build.bin}/phpunit">
+            <arg line="--log-junit=${build.dir}/test/junit.xml"/>
+            <arg line="--coverage-clover=${build.dir}/test/coverage.xml"/>
+            <arg line="--coverage-html=${build.dir}/test/coverage"/>
+            <arg line="--testdox-text=${build.dir}/test/results.txt"/>
+        </exec>
+    </target>
+
+    <target name="phpcb" depends="init"
+            description="PHP Code Browser">
+        <exec passthru="true"
+              checkreturn="${build.strict}"
+              executable="${build.bin}/phpcb">
+            <arg line="--extensions=php"/>
+            <arg line="--log=${build.dir}"/>
+            <arg line="--output=${build.dir}/phpcb"/>
+        </exec>
+    </target>
+</project>

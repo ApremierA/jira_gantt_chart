@@ -1,0 +1,187 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {% stylesheets '@GanttChartBundle/Resources/public/css/*' filter='cssrewrite' %}
+    <link rel="stylesheet" href="{{ asset_url }}" />
+    {% endstylesheets %}
+{% endblock %}
+
+{% block javascripts %}
+    {% javascripts '@GanttChartBundle/Resources/public/js/*' %}
+    <script src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+{% endblock %}
+
+{% block body %}
+{# в конфигурацию!#}
+    {% set jiraURI = '' %}
+    {% set cellWidth =  chartPeriod.getCellWidth() %}
+    {% set cellHeight = chartPeriod.getCellHeight() %}
+    {% set blockWidth = chartPeriod.getPeriodDayCount() * cellWidth %}
+
+    <div class="navBlock">
+        <div class="query_form">
+            <form action="/gantt" method="GET">
+                <label>JQL Запрос</label>
+                <textarea name="q[jql]" cols="100" rows="5">{{ query['jql']|default('') }}</textarea>
+                <label>Limit</label>
+                <input name="q[limit]" type="text" value="{{ query['limit']|default('') }}" />
+                <input type="submit" />
+            </form>
+
+            <ul class="navLinks">
+                <li><a href="/gantt?q[assignee]=12345">Запрос по сотруднику</a></li>
+            </ul>
+        </div>
+    </div>
+    <figure class="gantt">
+
+        <figcaption>{{ title }}</figcaption>
+
+        {# блок задач#}
+        <aside>
+            <ul class="gantt-labels" style="margin-top: {{ (cellHeight * 2) +6 }}px">
+
+                {% for key, item in chartItems %}
+                    <li class="gantt-label">
+                        <strong style="line-height: {{ cellHeight }}px; height: {{ cellHeight }}px">
+                            <span class="iterator">{{ key + 1 }}.</span>
+                            {# ПЕРЕНЕСТИ В КОД формирование адреса#}
+                            <a href="{{ jiraURI }}/browse/{{ item.getKey() }}"
+                               target="_blank"
+                               title="{{ item.getName }}">
+
+                                {{ item.getName }}
+                            </a>
+                        </strong>
+                    </li>
+                {% endfor %}
+            </ul>
+        </aside>
+        {# /блок задач#}
+
+        <section class="gantt-data">
+            <header>
+                {# формирование месяцев #}
+                <ul class="gantt-months" style="width:{{ blockWidth }}px">
+                    {% for dateTime in chartPeriod.getPeriodByMonth() %}
+                    {# длина ячейки считается как дефолт ширина*кол-во дней в месяце #}
+                         <li class="gantt-month" style="width:{{ chartPeriod.getDaysInPeriodMonth( dateTime ) * cellWidth }}px">
+                             <strong class="cellStyle">{{ dateTime.format('F') }} {{ dateTime.format('y') }}</strong>
+                         </li>
+                    {% endfor %}
+                </ul>
+                {# /формирование месяцев #}
+
+                {# формирование дней #}
+                <ul class="gantt-days" style="width:{{ blockWidth }}px">
+                    {% for dateTime in chartPeriod.getPeriodByDay() %}
+
+                        {% set weekend = '' %}
+                        {% if( chartPeriod.isWeekendDay(dateTime) ) %}
+                            {% set weekend = 'weekend' %}
+                        {% endif %}
+
+                        {% set today = '' %}
+                        {% if( chartPeriod.isTodayDay(dateTime) ) %}
+                            {% set today = 'today' %}
+                        {% endif %}
+
+                        <li class="gantt-day {{ weekend }} {{ today }}" style="width:{{ cellWidth }}px">
+                            <span style="line-height:{{ cellHeight }}px; height:{{ cellHeight }}px">
+                                {{ dateTime.format('d') }}
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ul>
+                {# /формирование дней #}
+            </header>
+
+            {# формирование предметной области #}
+            <ul class="gantt-items" style="width:{{ blockWidth }}px">
+                {% for key, item in chartItems %}
+                    <li class="gantt-item">
+                        <ul class="gantt-days">
+                            {% for dateTime in chartPeriod.getPeriodByDay() %}
+
+                                {% set weekend = '' %}
+                                {% if( chartPeriod.isWeekendDay(dateTime) ) %}
+                                    {% set weekend = 'weekend' %}
+                                {% endif %}
+
+                                {% set today = '' %}
+                                {% if( chartPeriod.isTodayDay(dateTime) ) %}
+                                    {% set today = 'today' %}
+                                {% endif %}
+
+                                <li class="gantt-day {{ weekend }} {{ today }}" style="width:{{ cellWidth }}px">
+                                    <span style="line-height:{{ cellHeight }}px; height:{{ cellHeight }}px">&nbsp;</span>
+                                </li>
+
+                            {% endfor %}
+                        </ul>
+                        {# отображение поля задачи #}
+                        <a href="{{ jiraURI }}/browse/{{ item.getKey() }}"
+                           target="_blank"
+                           title="
+Дата обновления: {{ item.getStartDate().format('d-m-y') }}
+Дата завершения: {{ item.getDueDate().format('d-m-y') }}
+Статус задачи: {{ item.getStatus() }}
+Исполнитель: {{ item.getAssignee().displayName }}">
+                            <span class="gantt-block {{ item.getViewStatus() }}"
+                                  style="left: {{ chartPeriod.getItemLeftOffset(item.getStartDate()) }}px;
+                                          width: {{ chartPeriod.getItemBlockWidth(item) }}px;
+                                          height: {{ cellHeight - 8 }}px ">
+
+                                <strong class="gantt-block-label">{# сюда можно что-нибудь вывести #}#</strong>
+                            </span>
+                        </a>
+                        {# /отображение поля задачи #}
+                    </li>
+                {% endfor %}
+            </ul>
+            {# /формирование предметной области #}
+
+            {# временная метка #}
+            {# необходимо сосчитать смещение слева до текущего дня #}
+            {% set leftOffset = chartPeriod.getItemLeftOffset() + (cellWidth / 2)|round %}
+            <time style="top: {{ cellHeight * 2 }}px; left: {{ leftOffset }}px" datetime="{{ chartPeriod.getToday() }}">Today</time>
+
+        </section>
+    </figure>
+
+    <fieldset class="legend">
+        <legend>Легенда</legend>
+
+        <div class="legend-block">
+            <span class="gantt-block" style="height: {{ cellHeight - 8 }}px; position:relative; display:block; margin:10px;">
+                <strong class="gantt-block-label"># Задача в статусе Новая</strong>
+            </span>
+
+            <span class="gantt-block progress" style="height: {{ cellHeight - 8 }}px; position:relative; display:block; margin:10px;">
+                <strong class="gantt-block-label"># Задача запланирована, указана дата завершения</strong>
+            </span>
+
+            <span class="gantt-block important" style="height: {{ cellHeight - 8 }}px; position:relative; display:block; margin:10px;">
+                <strong class="gantt-block-label"># Задача в статусе Планируется, нет даты завершения</strong>
+            </span>
+
+            <span class="gantt-block warning" style="height: {{ cellHeight - 8 }}px; position:relative; display:block; margin:10px;">
+                <strong class="gantt-block-label"># Ошибки планирования. Некорректные даты</strong>
+            </span>
+        </div>
+        <div class="annotation-block">
+            <div class="title">
+                Запрос на выборку задач отдела, пример:
+            </div>
+            assignee in membersOf([ Группа ]) AND status != "Закрыта" ORDER BY assignee, priority DESC, created ASC
+
+            <div class="title">
+                Запрос по сотруднику:
+            </div>
+            assignee = [ Доменный логин ] AND status != Закрыта ORDER BY fixVersion, priority, reporter
+
+        </div>
+    </fieldset>
+
+{% endblock %}
