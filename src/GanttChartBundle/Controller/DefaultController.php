@@ -8,6 +8,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
 use GanttChartBundle\Lib\Gantt\Gantt;
 use GanttChartBundle\Service\JiraRepositoryService;
+use Symfony\Component\HttpFoundation\Response;
 
 
 class DefaultController extends Controller
@@ -16,7 +17,7 @@ class DefaultController extends Controller
     /**
      * @Route("/gantt", name="Jira request")
      * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function ganttAction(Request $request)
     {
@@ -27,7 +28,7 @@ class DefaultController extends Controller
         $title = 'JQL Query';
         if(array_key_exists('assignee', $query)) {
             $title = $query['assignee'];
-            $query['jql'] = 'assignee = '. $query["assignee"] .' AND status != Закрыта ORDER BY fixVersion, priority, reporter';
+            $query['jql'] = 'assignee = '. $query["assignee"] .' AND status NOT IN (Закрыта, Closed) ORDER BY fixVersion, priority, reporter';
         }
 
         $default = array(
@@ -41,6 +42,7 @@ class DefaultController extends Controller
         $jiraItems = $jiraService->getJiraCollection('jiraGetByJqlSearch', $query);
         $startDate = $jiraService->getCollectionPeriodStartDate();
         $endDate   = $jiraService->getCollectionPeriodEndDate();
+        $jiraConfig = $jiraService->getJiraConfig();
 
         $chartPeriod = new ChartPeriod($startDate, $endDate);
 
@@ -49,13 +51,14 @@ class DefaultController extends Controller
             'title'          => $title,
             'chartPeriod'    => $chartPeriod,
             'chartItems'     => $jiraItems,
+            'jiraConfig'     => $jiraConfig,
         ]);
     }
 
     /**
      * @Route("/", name="Home page")
      * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function indexAction(Request $request)
     {

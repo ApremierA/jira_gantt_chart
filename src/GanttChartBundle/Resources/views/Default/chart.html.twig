@@ -14,7 +14,6 @@
 
 {% block body %}
 {# в конфигурацию!#}
-    {% set jiraURI = '' %}
     {% set cellWidth =  chartPeriod.getCellWidth() %}
     {% set cellHeight = chartPeriod.getCellHeight() %}
     {% set blockWidth = chartPeriod.getPeriodDayCount() * cellWidth %}
@@ -29,9 +28,7 @@
                 <input type="submit" />
             </form>
 
-            <ul class="navLinks">
-                <li><a href="/gantt?q[assignee]=12345">Запрос по сотруднику</a></li>
-            </ul>
+            <p>&nbsp;</p>
         </div>
     </div>
     <figure class="gantt">
@@ -47,7 +44,7 @@
                         <strong style="line-height: {{ cellHeight }}px; height: {{ cellHeight }}px">
                             <span class="iterator">{{ key + 1 }}.</span>
                             {# ПЕРЕНЕСТИ В КОД формирование адреса#}
-                            <a href="{{ jiraURI }}/browse/{{ item.getKey() }}"
+                            <a href="{{ jiraConfig.jiraHost }}/browse/{{ item.getKey() }}"
                                target="_blank"
                                title="{{ item.getName }}">
 
@@ -121,7 +118,7 @@
                             {% endfor %}
                         </ul>
                         {# отображение поля задачи #}
-                        <a href="{{ jiraURI }}/browse/{{ item.getKey() }}"
+                        <a href="{{ jiraConfig.jiraHost }}/browse/{{ item.getKey() }}"
                            target="_blank"
                            title="
 Дата обновления: {{ item.getStartDate().format('d-m-y') }}

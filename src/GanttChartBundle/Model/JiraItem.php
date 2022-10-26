@@ -8,6 +8,8 @@
 
 namespace GanttChartBundle\Model;
 
+use DateTime;
+
 /**
  * Class JiraItem
  * @package GanttChartBundle\Model
@@ -51,7 +53,7 @@ class JiraItem
     private $dueDate;
 
     /**
-     * @var \DateTime
+     * @var DateTime
      */
     private $createDate;
 
@@ -150,15 +152,15 @@ class JiraItem
     }
 
     /**
-     * @return Дата
+     * @return DateTime
      */
-    public function getStartDate()
+    public function getStartDate() : DateTime
     {
         return $this->startDate;
     }
 
     /**
-     * @param $startDate \DateTime
+     * @param $startDate DateTime
      */
     public function setStartDate($startDate)
     {
@@ -174,7 +176,7 @@ class JiraItem
     }
 
     /**
-     * @param $dueDate \DateTime
+     * @param $dueDate mixed
      */
     public function setDueDate($dueDate)
     {
@@ -182,7 +184,7 @@ class JiraItem
     }
 
     /**
-     * @return \DateTime
+     * @return DateTime
      */
     public function getCreateDate()
     {
@@ -190,7 +192,7 @@ class JiraItem
     }
 
     /**
-     * @param \DateTime $createDate
+     * @param DateTime $createDate
      */
     public function setCreateDate($createDate)
     {

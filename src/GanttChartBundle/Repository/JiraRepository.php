@@ -34,7 +34,7 @@ class JiraRepository
         // TODO Конфигурацию необходимо передавать извне
         $this->jiraConfig = new ArrayConfiguration(
             array(
-                'jiraHost' => '',
+                'jiraHost' => '', //without close slash
                 'jiraUser' => '', //set user auth name
                 'jiraPassword' => '' //set user passwd
             )
@@ -57,7 +57,7 @@ class JiraRepository
 
         } catch (JiraException $e) {
             // @TODO some
-            print_r($params);
+            print_r($e);
             exit;
         }
 
@@ -102,4 +102,11 @@ class JiraRepository
         return $result;
     }
 
+    /**
+     * @return ArrayConfiguration
+     */
+    public function getJiraConfig()
+    {
+        return $this->jiraConfig;
+    }
 }

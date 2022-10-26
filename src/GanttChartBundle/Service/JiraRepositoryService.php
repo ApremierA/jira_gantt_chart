@@ -10,9 +10,11 @@
 
 namespace GanttChartBundle\Service;
 
+use Exception;
 use GanttChartBundle\Model\JiraItemDecorator;
 use GanttChartBundle\Repository\JiraRepository;
 use GanttChartBundle\Model\JiraItem;
+use JiraRestApi\Configuration\ArrayConfiguration;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 class JiraRepositoryService
@@ -44,6 +46,14 @@ class JiraRepositoryService
     public function __construct()
     {
         $this->jiraRepository = new JiraRepository();
+    }
+
+    /**
+     * @return ArrayConfiguration
+     */
+    public function getJiraConfig()
+    {
+        return $this->jiraRepository->getJiraConfig();
     }
 
     /**
@@ -90,14 +100,14 @@ class JiraRepositoryService
 
     /**
      * @param $repositoryMethod string
-     * @throws \Exception
+     * @throws Exception
      * @return array
      */
     private function createJiraItemCollection($repositoryMethod, $params)
     {
 
         if(method_exists($this->jiraRepository, $repositoryMethod) === false) {
-            throw new \Exception("Вызывается несуществующий метод репозитория Jira");
+            throw new Exception("Вызывается несуществующий метод репозитория Jira");
         }
         // @TODO времнка динамический вызов метода репозитория
         $jiraRepositoryEntity = $this->jiraRepository->{ $repositoryMethod }($params);
@@ -119,9 +129,11 @@ class JiraRepositoryService
 
     /**
      * @param JiraItem $item
+     * @param $jiraTask
      * @return JiraItem
+     * @throws Exception
      */
-    private function itemPostProcessor(JiraItem $item, $jiraTask)
+    private function itemPostProcessor(JiraItem $item, $jiraTask): JiraItem
     {
         $starDate = $item->getStartDate()->getTimestamp();
 
@@ -140,10 +152,11 @@ class JiraRepositoryService
      * @param $jiraTask
      * @return JiraItem
      * Выбирает дату завершения и устанавливает статус для отображения
+     * @throws Exception
      */
     private function setItemDueDateByJiraTask(JiraItem $item, $jiraTask)
     {
-        $item->setDueDate($jiraTask->fields->duedate);
+        $item->setDueDate(new \DateTime($jiraTask->fields->duedate));
         $item->setViewStatus($item::PROGRESS);
 
         if($item->getDueDate() === NULL) {
@@ -162,7 +175,7 @@ class JiraRepositoryService
             }
         }
 
-        // Устанавливаем дату из FixVercion
+        // Устанавливаем дату из FixVersion
         if($item->getDueDate() === NULL) {
 
             $date = new \DateTime();
