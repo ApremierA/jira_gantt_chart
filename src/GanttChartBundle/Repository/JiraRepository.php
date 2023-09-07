@@ -11,6 +11,7 @@ namespace GanttChartBundle\Repository;
 use JiraRestApi\Configuration\ArrayConfiguration;
 use JiraRestApi\Issue\IssueService;
 use JiraRestApi\JiraException;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class JiraRepository
 {
@@ -28,15 +29,15 @@ class JiraRepository
     /**
      * JiraRepository constructor.
      */
-    public function __construct()
+    public function __construct(ParameterBagInterface $params)
     {
 
         // TODO Конфигурацию необходимо передавать извне
         $this->jiraConfig = new ArrayConfiguration(
             array(
-                'jiraHost' => '', //without close slash
-                'jiraUser' => '', //set user auth name
-                'jiraPassword' => '' //set user passwd
+                'jiraHost' => $params->get('jira_host'), //without close slash
+                'jiraUser' => $params->get('jira_user'), //set user auth name
+                'jiraPassword' => $params->get('jira_api_key') //set user passwd or apikey
             )
         );
     }
@@ -57,7 +58,7 @@ class JiraRepository
 
         } catch (JiraException $e) {
             // @TODO some
-            print_r($e);
+            print_r($e->getMessage());
             exit;
         }
 

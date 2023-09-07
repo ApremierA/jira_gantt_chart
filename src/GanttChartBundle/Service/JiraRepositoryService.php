@@ -16,6 +16,7 @@ use GanttChartBundle\Repository\JiraRepository;
 use GanttChartBundle\Model\JiraItem;
 use JiraRestApi\Configuration\ArrayConfiguration;
 use Symfony\Component\Validator\Constraints\DateTime;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class JiraRepositoryService
 {
@@ -43,9 +44,9 @@ class JiraRepositoryService
     /**
      * JiraRepositoryService constructor.
      */
-    public function __construct()
+    public function __construct(ParameterBagInterface $params)
     {
-        $this->jiraRepository = new JiraRepository();
+        $this->jiraRepository = new JiraRepository($params);
     }
 
     /**

@@ -28,7 +28,6 @@ class DefaultController extends Controller
         $title = 'JQL Query';
         if(array_key_exists('assignee', $query)) {
             $title = $query['assignee'];
-            $query['jql'] = 'assignee = '. $query["assignee"] .' AND status NOT IN (Закрыта, Closed) ORDER BY fixVersion, priority, reporter';
         }
 
         $default = array(
@@ -38,7 +37,7 @@ class DefaultController extends Controller
         );
         $query = array_merge($default, $query);
 
-        $jiraService = new JiraRepositoryService();
+        $jiraService = new JiraRepositoryService($this->container->getParameterBag());
         $jiraItems = $jiraService->getJiraCollection('jiraGetByJqlSearch', $query);
         $startDate = $jiraService->getCollectionPeriodStartDate();
         $endDate   = $jiraService->getCollectionPeriodEndDate();
